@@ -46,6 +46,8 @@ import android.widget.ToggleButton;
 public class AccelerationActivity extends Activity implements
 		SensorEventListener, OnSeekBarChangeListener, OnTouchListener
 {
+	private boolean meanFilter = true;
+
 	// Constants for the low-pass filters
 	private float timeConstant = 0.297f;
 	private float alphaWiki = 0.1f;
@@ -86,6 +88,9 @@ public class AccelerationActivity extends Activity implements
 	// The Acceleration View
 	private PlotView plotView;
 
+	private MeanFilter meanFilterADev;
+	private MeanFilter meanFilterWiki;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -119,6 +124,9 @@ public class AccelerationActivity extends Activity implements
 				(XYPlot) this.findViewById(R.id.dynamicLinePlot));
 		plotView.setMaxRange(zoom);
 		plotView.setMinRange(-zoom);
+
+		meanFilterADev = new MeanFilter();
+		meanFilterWiki = new MeanFilter();
 
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 	}
@@ -157,6 +165,10 @@ public class AccelerationActivity extends Activity implements
 						* (input[1] - gravityWiki[1]);
 				gravityWiki[2] = gravityWiki[2] + alphaWiki
 						* (input[2] - gravityWiki[2]);
+				if (meanFilter)
+				{
+					gravityWiki = meanFilterWiki.filterFloat(gravityWiki);
+				}
 
 				// Calculate the linear acceleration by subtracting gravity from
 				// the input signal.
@@ -177,6 +189,11 @@ public class AccelerationActivity extends Activity implements
 						* input[1];
 				gravityADev[2] = alphaADev * gravityADev[2] + (1 - alphaADev)
 						* input[2];
+
+				if (meanFilter)
+				{
+					gravityADev = meanFilterADev.filterFloat(gravityADev);
+				}
 
 				// Calculate the linear acceleration by subtracting gravity from
 				// the input signal.
