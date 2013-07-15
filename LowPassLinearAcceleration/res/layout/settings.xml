@@ -1,139 +1,78 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/settings_dialog_root_element"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical" >
 
     <ScrollView
         android:id="@+id/ScrollView01"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="fill_parent"
+        android:fillViewport="true" >
 
         <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:gravity="center_vertical|center_horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
 
-            <TextView
-                android:layout_width="fill_parent"
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Draw Axes"
-                android:textColor="#FFFFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="5dp" >
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true" >
+
+                    <TextView
+                        android:id="@+id/label_filter_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-condensed"
+                        android:text="@string/acceleration_name"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@color/dark_orange" />
+
+                    <TextView
+                        android:id="@+id/label_filter_description"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@+id/label_filter_name"
+                        android:fontFamily="sans-serif-condensed"
+                        android:text="@string/action_settings"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="1dp"
+                android:background="@color/light_blue" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp" >
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true" >
+
+                    <LinearLayout
+                        android:id="@+id/layout_settings_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" >
+                    </LinearLayout>
+                </RelativeLayout>
+            </RelativeLayout>
 
             <View
                 android:layout_width="fill_parent"
-                android:layout_height="1dip"
-                android:background="#FFFFFFFF" />
-
-            <ToggleButton
-                android:id="@+id/xaxistogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="X-Axis Off"
-                android:textOn="X-Axis On" />
-
-            <ToggleButton
-                android:id="@+id/yaxistogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="Y-Axis Off"
-                android:textOn="Y-Axis On" />
-
-            <ToggleButton
-                android:id="@+id/zaxistogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="Z-Axis Off"
-                android:textOn="Z-Axis On" />
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Draw Data"
-                android:textColor="#FFFFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-            
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="1dip"
-                android:background="#FFFFFFFF" />
-
-            <ToggleButton
-                android:id="@+id/gravitytogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="Gravity Off"
-                android:textOn="Gravity On" />
-
-            <ToggleButton
-                android:id="@+id/rawtogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="Raw Off"
-                android:textOn="Raw On" />
-
-            <ToggleButton
-                android:id="@+id/linearacceltogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="Accel Off"
-                android:textOn="Accel On" />
-            
-              <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Draw Filter"
-                android:textColor="#FFFFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-            
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="1dip"
-                android:background="#FFFFFFFF" />
-
-            <ToggleButton
-                android:id="@+id/wikilptogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="Wiki LP Off"
-                android:textOn="Wiki LP On" />
-
-            <ToggleButton
-                android:id="@+id/andevlptogglebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="onToggleClicked"
-                android:textOff="AndDev LP Off"
-                android:textOn="AndDev LP On" />
-
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="1dip"
-                android:background="#FFFFFFFF" />
-
-            <Button
-                android:id="@+id/done_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Done" />
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
         </LinearLayout>
     </ScrollView>
 
