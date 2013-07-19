@@ -16,7 +16,7 @@ import com.kircherelectronics.lowpasslinearacceleration.filter.LPFWikipedia;
 import com.kircherelectronics.lowpasslinearacceleration.filter.LowPassFilter;
 import com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeAccelerationHolo;
 import com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeRotationHolo;
-import com.kircherelectronics.lowpasslinearacceleration.plot.DynamicPlot;
+import com.kircherelectronics.lowpasslinearacceleration.plot.DynamicLinePlot;
 import com.kircherelectronics.lowpasslinearacceleration.plot.PlotColor;
 
 import android.graphics.Color;
@@ -151,7 +151,7 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	private DecimalFormat dfLong;
 
 	// Graph plot for the UI outputs
-	private DynamicPlot dynamicPlot;
+	private DynamicLinePlot dynamicPlot;
 
 	// Touch to zoom constants for the dynamicPlot
 	private float distance = 0;
@@ -622,7 +622,7 @@ public class LinearAccelerationLPFActivity extends Activity implements
 		// Create the graph plot
 		XYPlot plot = (XYPlot) findViewById(R.id.plot_sensor);
 		plot.setTitle("Acceleration");
-		dynamicPlot = new DynamicPlot(plot);
+		dynamicPlot = new DynamicLinePlot(plot);
 		dynamicPlot.setMaxRange(1.2);
 		dynamicPlot.setMinRange(-1.2);
 

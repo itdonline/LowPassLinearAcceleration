@@ -36,7 +36,7 @@ import android.util.SparseArray;
  * @author Kaleb
  * @version %I%, %G%
  */
-public class DynamicPlot
+public class DynamicLinePlot
 {
 	private static final int VERTEX_WIDTH = 2;
 	private static final int LINE_WIDTH = 2;
@@ -57,7 +57,7 @@ public class DynamicPlot
 	 * @param activity
 	 *            the Activity that owns this View.
 	 */
-	public DynamicPlot(XYPlot dynamicPlot)
+	public DynamicLinePlot(XYPlot dynamicPlot)
 	{
 		this.dynamicPlot = dynamicPlot;
 
@@ -208,8 +208,10 @@ public class DynamicPlot
 	public void removeSeriesPlot(int key)
 	{
 		dynamicPlot.removeSeries(series.get(key));
-		
+
+		history.get(key).removeAll(history.get(key));
 		history.remove(key);
+
 		series.remove(key);
 	}
 
