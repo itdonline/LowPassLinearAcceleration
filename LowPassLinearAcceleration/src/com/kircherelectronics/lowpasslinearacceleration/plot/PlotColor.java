@@ -1,4 +1,7 @@
-package com.kircherelectronics.lowpasslinearacceleration;
+package com.kircherelectronics.lowpasslinearacceleration.plot;
+
+import com.kircherelectronics.lowpasslinearacceleration.R;
+import com.kircherelectronics.lowpasslinearacceleration.R.color;
 
 import android.content.Context;
 

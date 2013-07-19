@@ -169,22 +169,22 @@
                     android:layout_centerHorizontal="true" >
 
                     <RelativeLayout
+                        android:id="@+id/layout_acceleration_gauge"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/layout_acceleration_tilt">
+                        android:layout_height="wrap_content" >
 
                         <RelativeLayout
                             android:id="@+id/label_acceleration_tilt"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" 
-                            android:layout_centerHorizontal="true">
+                            android:layout_height="wrap_content"
+                            android:layout_centerHorizontal="true" >
 
                             <TextView
                                 android:id="@+id/label_acceleration_name"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif-condensed"
-                                android:text="@string/acceleration_name"
+                                android:text="@string/input_name"
                                 android:textAppearance="?android:attr/textAppearanceSmall"
                                 android:textColor="@color/light_green" />
 
@@ -198,52 +198,106 @@
                                 android:textAppearance="?android:attr/textAppearanceSmall" />
                         </RelativeLayout>
 
-                        <com.kircherelectronics.lowpasslinearacceleration.GaugeRotationHolo
-                            android:id="@+id/gauge_acceleration"
-                            android:layout_width="150dp"
-                            android:layout_height="150dp"
+                        <com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeRotationHolo
+                            android:id="@+id/gauge_acceleration_tilt"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
                             android:layout_below="@+id/label_acceleration_tilt" />
+
+                        <com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeAccelerationHolo
+                            android:id="@+id/gauge_acceleration"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
+                            android:layout_below="@+id/gauge_acceleration_tilt" />
                     </RelativeLayout>
-                    
-                     <RelativeLayout
+
+                    <RelativeLayout
+                        android:id="@+id/layout_lpf_wiki_gauge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/layout_lpf_tilt"
-                        android:layout_toRightOf="@+id/layout_acceleration_tilt">
+                        android:layout_toRightOf="@+id/layout_acceleration_gauge" >
 
                         <RelativeLayout
-                            android:id="@+id/label_lpf_tilt"
+                            android:id="@+id/label_lpf_wiki_tilt"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" 
-                            android:layout_centerHorizontal="true">
+                            android:layout_height="wrap_content"
+                            android:layout_centerHorizontal="true" >
 
                             <TextView
-                                android:id="@+id/label_lpf_name"
+                                android:id="@+id/label_lpf_wiki_name"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif-condensed"
-                                android:text="@string/lpf_name"
+                                android:text="@string/lpf_wiki_name"
                                 android:textAppearance="?android:attr/textAppearanceSmall"
                                 android:textColor="@color/light_blue" />
 
                             <TextView
-                                android:id="@+id/label_lpf_description"
+                                android:id="@+id/label_lpf_wiki_description"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_toRightOf="@+id/label_lpf_name"
+                                android:layout_toRightOf="@+id/label_lpf_wiki_name"
                                 android:fontFamily="sans-serif-condensed"
                                 android:text="@string/filter_label"
                                 android:textAppearance="?android:attr/textAppearanceSmall" />
                         </RelativeLayout>
 
-                        <com.kircherelectronics.lowpasslinearacceleration.GaugeRotationHolo
-                            android:id="@+id/gauge_lpf"
-                            android:layout_width="150dp"
-                            android:layout_height="150dp"
-                            android:layout_below="@+id/label_lpf_tilt" />
+                        <com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeRotationHolo
+                            android:id="@+id/gauge_lpf_wiki_tilt"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
+                            android:layout_below="@+id/label_lpf_wiki_tilt" />
+
+                        <com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeAccelerationHolo
+                            android:id="@+id/gauge_lpf_wiki"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
+                            android:layout_below="@+id/gauge_lpf_wiki_tilt" />
                     </RelativeLayout>
 
-                   
+                    <RelativeLayout
+                        android:id="@+id/layout_lpf_and_dev_gauge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@+id/layout_lpf_wiki_gauge" >
+
+                        <RelativeLayout
+                            android:id="@+id/label_lpf_and_dev_tilt"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerHorizontal="true" >
+
+                            <TextView
+                                android:id="@+id/label_lpf_and_dev_name"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-condensed"
+                                android:text="@string/lpf_and_dev_name"
+                                android:textAppearance="?android:attr/textAppearanceSmall"
+                                android:textColor="@color/light_blue" />
+
+                            <TextView
+                                android:id="@+id/label_lpf_and_dev_description"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_toRightOf="@+id/label_lpf_and_dev_name"
+                                android:fontFamily="sans-serif-condensed"
+                                android:text="@string/filter_label"
+                                android:textAppearance="?android:attr/textAppearanceSmall" />
+                        </RelativeLayout>
+
+                        <com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeRotationHolo
+                            android:id="@+id/gauge_lpf_and_dev_tilt"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
+                            android:layout_below="@+id/label_lpf_and_dev_tilt" />
+
+                        <com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeAccelerationHolo
+                            android:id="@+id/gauge_lpf_and_dev"
+                            android:layout_width="90dp"
+                            android:layout_height="90dp"
+                            android:layout_below="@+id/gauge_lpf_and_dev_tilt" />
+                    </RelativeLayout>
                 </RelativeLayout>
             </RelativeLayout>
 

@@ -1,4 +1,4 @@
-package com.kircherelectronics.lowpasslinearacceleration;
+package com.kircherelectronics.lowpasslinearacceleration.filter;
 
 /*
  * Low-Pass Linear Acceleration

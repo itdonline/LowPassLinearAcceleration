@@ -1,4 +1,4 @@
-package com.kircherelectronics.lowpasslinearacceleration;
+package com.kircherelectronics.lowpasslinearacceleration.statistics;
 
 /*
  * Low-Pass Linear Acceleration
@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import com.kircherelectronics.lowpasslinearacceleration.LinearAccelerationLPFActivity;
+
 import android.util.Log;
 
 /**
@@ -42,7 +44,7 @@ public class StdDev
 	 * 
 	 * @param value
 	 *            The sample value.
-	 * @return The variance of the rolling window.
+	 * @return The std dev of the rolling window.
 	 */
 	public double addSample(double value)
 	{
@@ -65,8 +67,8 @@ public class StdDev
 	}
 
 	/**
-	 * Calculate the variance of the rolling window.
-	 * @return The variance of the rolling window.
+	 * Calculate the std dev of the rolling window.
+	 * @return The std dev of the rolling window.
 	 */
 	private double calculateStdDev()
 	{

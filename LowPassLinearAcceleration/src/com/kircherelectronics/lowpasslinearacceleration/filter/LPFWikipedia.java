@@ -1,4 +1,4 @@
-package com.kircherelectronics.lowpasslinearacceleration;
+package com.kircherelectronics.lowpasslinearacceleration.filter;
 
 import android.util.Log;
 
@@ -21,19 +21,26 @@ import android.util.Log;
  */
 
 /**
- * An implementation of the Android Developer low-pass filter.
+ * An implementation of the Wikipedia low-pass filter. The Wikipedia LPF, is an
+ * IIR single-pole implementation. The coefficient, a (alpha), can be adjusted
+ * based on the sample period of the sensor to produce the desired time constant
+ * that the filter will act on. It takes a simple form of y[i] = y[i] + alpha *
+ * (x[i] - y[i]). Alpha is defined as alpha = dt / (timeConstant + dt);) where
+ * the time constant is the length of signals the filter should act on and dt is
+ * the sample period (1/frequency) of the sensor.
+ * 
  * 
  * @author Kaleb
- * @see http://developer.android.com/reference/android/hardware/SensorEvent.html
+ * @see http://en.wikipedia.org/wiki/Low-pass_filter
  * @version %I%, %G%
  */
-public class LPFAndroidDeveloper implements LowPassFilter
+public class LPFWikipedia implements LowPassFilter
 {
 	private boolean alphaStatic = false;
 
 	// Constants for the low-pass filters
 	private float timeConstant = 0.18f;
-	private float alpha = 0.9f;
+	private float alpha = 0.1f;
 	private float dt = 0;
 
 	// Timestamps for the low-pass filters
@@ -72,17 +79,22 @@ public class LPFAndroidDeveloper implements LowPassFilter
 			// Convert from nanoseconds to seconds
 			dt = 1 / (count / ((timestamp - timestampOld) / 1000000000.0f));
 
-			alpha = timeConstant / (timeConstant + dt);
-			
+			// Calculate Wikipedia low-pass alpha
+			alpha = dt / (timeConstant + dt);
+
 		}
+		
+		Log.d("tag", String.valueOf(alpha));
 		
 		count++;
 
 		if (count > 5)
 		{
-			gravity[0] = alpha * gravity[0] + (1 - alpha) * input[0];
-			gravity[1] = alpha * gravity[1] + (1 - alpha) * input[1];
-			gravity[2] = alpha * gravity[2] + (1 - alpha) * input[2];
+			// Update the Wikipedia filter
+			// y[i] = y[i] + alpha * (x[i] - y[i])
+			gravity[0] = gravity[0] + alpha * (this.input[0] - gravity[0]);
+			gravity[1] = gravity[1] + alpha * (this.input[1] - gravity[1]);
+			gravity[2] = gravity[2] + alpha * (this.input[2] - gravity[2]);
 			
 			linearAcceleration[0] = input[0] - gravity[0];
 			linearAcceleration[1] = input[1] - gravity[1];
@@ -100,7 +112,7 @@ public class LPFAndroidDeveloper implements LowPassFilter
 	{
 		this.alphaStatic = alphaStatic;
 	}
-	
+
 	/**
 	 * Set static alpha.
 	 * @param alpha The value for alpha, 0 < alpha <= 1

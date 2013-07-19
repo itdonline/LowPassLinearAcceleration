@@ -1,4 +1,4 @@
-package com.kircherelectronics.lowpasslinearacceleration;
+package com.kircherelectronics.lowpasslinearacceleration.plot;
 
 import java.util.LinkedList;
 
@@ -172,8 +172,6 @@ public class DynamicPlot
 	 */
 	public void addSeriesPlot(String seriesName, int key, int color)
 	{
-		int seriesNum = series.size();
-
 		history.append(key, new LinkedList<Number>());
 
 		series.append(key, new SimpleXYSeries(seriesName));
@@ -198,8 +196,7 @@ public class DynamicPlot
 
 		formatter.setVertexPaint(vertexPaint);
 
-		dynamicPlot.addSeries(series.get(seriesNum), formatter);
-
+		dynamicPlot.addSeries(series.get(key), formatter);
 	}
 
 	/**
@@ -210,6 +207,8 @@ public class DynamicPlot
 	 */
 	public void removeSeriesPlot(int key)
 	{
+		dynamicPlot.removeSeries(series.get(key));
+		
 		history.remove(key);
 		series.remove(key);
 	}

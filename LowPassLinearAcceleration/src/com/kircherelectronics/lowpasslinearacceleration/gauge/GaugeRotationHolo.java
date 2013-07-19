@@ -1,4 +1,4 @@
-package com.kircherelectronics.lowpasslinearacceleration;
+package com.kircherelectronics.lowpasslinearacceleration.gauge;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -41,7 +41,7 @@ import android.view.View;
  * Android 3.0 which won't hog the UI thread like View will. This should only be
  * used with devices or certain libraries that require View.
  * 
- * @author Kaleb, Scott Bannick
+ * @author Kaleb and Scott Bannick
  * @version %I%, %G%
  * @see http://developer.android.com/reference/android/view/View.html
  * @since Scott Bannick 5/19/2013: Made gui changes.
