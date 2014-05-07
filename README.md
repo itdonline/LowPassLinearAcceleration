@@ -1,7 +1,9 @@
 LowPassLinearAcceleration
 =========================
 
-Low Pass Linear Acceleration is an Android based code example and working application that estimates gravity with a low-pass filter implementation. The gravity estimation can then be used to calculate linear acceleration. The low-pass filter has the advantage of only using the acceleration sensor to provide an estimation of linear acceleration, no other sensors are required. While this example is implemented with Android/Java, the jist of the algorithm can be applied to almost any hardware/language combination to determine linear acceleration.
+![](http://www.kircherelectronics.com/bundles/keweb/css/images/low_pass_linear_acceleration_phone_graphic.png?raw=true)
+
+Low Pass Linear Acceleration is an Android based open source code example and working application that estimates gravity with a low-pass filter implementation. The gravity estimation can then be used to calculate linear acceleration. The low-pass filter has the advantage of only using the acceleration sensor to provide an estimation of linear acceleration, no other sensors are required. While this example is implemented with Android/Java, the jist of the algorithm can be applied to almost any hardware/language combination to determine linear acceleration.
 
 Linear Acceleration:
 
