@@ -17,3 +17,18 @@ Low-Pass Filters:
 
 A low-pass filter is a filter that passes low-frequency signals and attenuates (reduces the amplitude of) signals with frequencies higher than the cutoff frequency. The actual amount of attenuation for each frequency varies depending on specific filter design. To find the gravity component of an acceleration signal, a low-pass filter is used to pass the long term portion of the signal (which is assumed to be gravity) through the filter and to attenuate everything else. The gravity component of the signal can then be subtracted from the original acceleration signal to find the linear acceleration.
 
+Features:
+* Plot linear acceleration in real-time
+* Log linear acceleration to a .CSV file
+* Modify the parameters of the low-pass filter to meet your requirements
+* Quickly compare different low-pass filter configurations
+
+Useful Links:
+
+* [Low-Pass Linear Acceleration Homepage](http://www.kircherelectronics.com/lowpasslinearacceleration/lowpasslinearacceleration)
+* [Low-Pass Linear Acceleration Community](http://kircherelectronics.com/forum/viewforum.php?f=13)
+* [Low-Pass Linear Acceleration Blog Article](http://www.kircherelectronics.com/blog/index.php/11-android/sensors/10-low-pass-filter-linear-acceleration)
+* [Download Low-Pass Linear Acceleration from Google Play](https://play.google.com/store/apps/details?id=com.kircherelectronics.lowpasslinearacceleration)
+
+Written by [Kircher Electronics](https://www.kircherelectronics.com)
+
