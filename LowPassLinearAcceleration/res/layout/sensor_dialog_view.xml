@@ -4,10 +4,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <RelativeLayout
+    <Spinner
+        android:id="@+id/sensor_frequency_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp" >
+        android:entries="@array/frequency_array" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
 
         <RelativeLayout
             android:layout_width="wrap_content"
@@ -15,40 +20,34 @@
             android:layout_centerHorizontal="true" >
 
             <TextView
-                android:id="@+id/label_alpha"
+                android:id="@+id/label_sensor_frequency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-condensed"
-                android:text="@string/static_alpha"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:textColor="@color/dark_orange" />
+                android:text="@string/frequency_label"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
-                android:id="@+id/value_alpha"
+                android:id="@+id/value_sensor_frequency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toRightOf="@+id/label_alpha"
-                android:fontFamily="sans-serif-condensed"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@+id/label_sensor_frequency"
                 android:text="@string/default_value"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
         </RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp" >
+        android:layout_height="wrap_content" 
+        android:layout_marginTop="10dp">
 
-        <RelativeLayout
+        <Button
+            android:id="@+id/button_accept"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true" >
-
-            <NumberPicker
-                android:id="@+id/numberPicker1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </RelativeLayout>
+            android:layout_centerHorizontal="true"
+            android:text="@string/done_label" />
     </RelativeLayout>
 
 </LinearLayout>

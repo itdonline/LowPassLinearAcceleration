@@ -40,7 +40,7 @@
                         android:layout_height="wrap_content"
                         android:layout_toRightOf="@+id/label_sensor_name"
                         android:fontFamily="sans-serif-condensed"
-                        android:text="@string/filter_help"
+                        android:text="@string/action_help"
                         android:textAppearance="?android:attr/textAppearanceMedium" />
                 </RelativeLayout>
             </RelativeLayout>
@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:text="Low-Pass Linear Acceleration is intended to help the user explore estimating the linear acceleration of the device with only a acceleration sensor and a low-pass filter. Currently, there are two IIR low-pass filters supported."
+                android:text="Low-Pass Linear Acceleration is intended to help the user explore estimating the linear acceleration of the device with only a acceleration sensor and a low-pass filter."
                 android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <TextView
@@ -93,7 +93,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:text="Low-Pass Linear Acceleration applies different low-pass filters on the outputs of the acceleration sensor in an attempt to seperate the gravity (tilt) and linear acceleration components of the acceleration signal. Different filters modify the signal in different ways and some filters work better in certain applications than others."
+                android:text="Low-Pass Linear Acceleration applies a low-pass filter on the outputs of the acceleration sensor in an attempt to seperate the gravity (tilt) and linear acceleration components of the acceleration signal. Different filters modify the signal in different ways and some filters work better in certain applications than others. The low-pass filter is an IIR single-pole implementation. The coefficient, a (alpha), can be adjusted based on the sample period of the sensor to produce the desired time constant that the filter will act on. The time constant is user definable. The LPF takes a simple form of y[0] = alpha * y[0] + (1 - alpha) * x[0]. Alpha is defined as alpha = timeConstant / (timeConstant + dt) where the time constant is the length of signals the filter should act on and dt is the sample period (1/frequency) of the sensor."
                 android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <TextView
@@ -101,7 +101,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:text="How do I apply filters?"
+                android:text="How do I change the filter's time constant?"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textStyle="bold" />
 
@@ -110,7 +110,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:text="Filters can be applied by pressing the Settings button in the Menu and then pressing Filters. You can check what filters you would like to use. Once you have selected the filter(s), you can adjust key filter parameters to fit your application. "
+                android:text="The time constant of the LPF can be defined by tapping on the Menu item, selecting Settings and then selecting Filters."
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+            
+                <TextView
+                android:id="@+id/text_header_introduction_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="How do I change the acceleration sensor's frequency?"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/text_introduction_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="The frequency of the acceleration sensor can be changed by tapping on the Menu item, selecting Settings and then selecting Sensors."
                 android:textAppearance="?android:attr/textAppearanceSmall" />
         </LinearLayout>
     </ScrollView>

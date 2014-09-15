@@ -5,20 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.FieldPosition;
-import java.text.Format;
-import java.text.ParsePosition;
 import java.util.Calendar;
-import com.androidplot.xy.XYPlot;
-import com.kircherelectronics.lowpasslinearacceleration.dialog.SettingsDialog;
-import com.kircherelectronics.lowpasslinearacceleration.filter.LPFAndroidDeveloper;
-import com.kircherelectronics.lowpasslinearacceleration.filter.LPFWikipedia;
-import com.kircherelectronics.lowpasslinearacceleration.filter.LowPassFilter;
-import com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeAccelerationHolo;
-import com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeRotationHolo;
-import com.kircherelectronics.lowpasslinearacceleration.plot.DynamicLinePlot;
-import com.kircherelectronics.lowpasslinearacceleration.plot.PlotColor;
 
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -29,26 +22,31 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.app.Activity;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.View.OnTouchListener;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.androidplot.xy.XYPlot;
+import com.kircherelectronics.lowpasslinearacceleration.dialog.FilterSettingsDialog;
+import com.kircherelectronics.lowpasslinearacceleration.dialog.SensorSettingsDialog;
+import com.kircherelectronics.lowpasslinearacceleration.filter.LowPassFilter;
+import com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeAcceleration;
+import com.kircherelectronics.lowpasslinearacceleration.gauge.GaugeRotation;
+import com.kircherelectronics.lowpasslinearacceleration.plot.DynamicLinePlot;
+import com.kircherelectronics.lowpasslinearacceleration.plot.PlotColor;
+import com.kircherelectronics.lowpasslinearacceleration.plot.PlotPrefCallback;
+import com.kircherelectronics.lowpasslinearacceleration.prefs.PrefUtils;
+
 /*
  * Low-Pass Linear Acceleration
- * Copyright (C) 2013, Kaleb Kircher - Boki Software, Kircher Engineering, LLC
+ * Copyright (C) 2013, Kaleb Kircher - Kircher Engineering, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,116 +71,57 @@ import android.widget.Toast;
  * which can then be subtracted from the acceleration to find the linear
  * acceleration.
  * 
- * Currently supports two versions of IIR digital low-pass filter. The low-pass
+ * Currently supports one version of IIR digital low-pass filter. The low-pass
  * filters are classified as recursive, or infinite response filters (IIR). The
  * current, nth sample output depends on both current and previous inputs as
  * well as previous outputs. It is essentially a weighted moving average, which
  * comes in many different flavors depending on the values for the coefficients,
  * a and b.
  * 
- * The first low-pass filter, the Wikipedia LPF, is an IIR single-pole
- * implementation. The coefficient, a (alpha), can be adjusted based on the
- * sample period of the sensor to produce the desired time constant that the
- * filter will act on. It takes a simple form of y[i] = y[i] + alpha * (x[i] -
- * y[i]). Alpha is defined as alpha = dt / (timeConstant + dt);) where the time
- * constant is the length of signals the filter should act on and dt is the
- * sample period (1/frequency) of the sensor.
- * 
- * The second low-pass filter, the Android Developer LPF, is an IIR single-pole
- * implementation. The coefficient, a (alpha), can be adjusted based on the
- * sample period of the sensor to produce the desired time constant that the
- * filter will act on. It is essentially the same as the Wikipedia LPF. It takes
- * a simple form of y[0] = alpha * y[0] + (1 - alpha) * x[0]. Alpha is defined
- * as alpha = timeConstant / (timeConstant + dt) where the time constant is the
- * length of signals the filter should act on and dt is the sample period
- * (1/frequency) of the sensor.
+ * The low-pass filter is an IIR single-pole implementation. The coefficient, a
+ * (alpha), can be adjusted based on the sample period of the sensor to produce
+ * the desired time constant that the filter will act on. The time constant is
+ * user definable. The LPF takes a simple form of y[0] = alpha * y[0] + (1 -
+ * alpha) * x[0]. Alpha is defined as alpha = timeConstant / (timeConstant + dt)
+ * where the time constant is the length of signals the filter should act on and
+ * dt is the sample period (1/frequency) of the sensor.
  * 
  * @author Kaleb
  * @version %I%, %G%
  */
 public class LinearAccelerationLPFActivity extends Activity implements
-		SensorEventListener, Runnable, OnTouchListener
+		SensorEventListener, Runnable, OnTouchListener, PlotPrefCallback
 {
 
-	// The static alpha for the LPF Wikipedia
-	private static float WIKI_STATIC_ALPHA = 0.1f;
-	// The static alpha for the LPF Android Developer
-	private static float AND_DEV_STATIC_ALPHA = 0.9f;
-
-	// The size of the sample window that determines RMS Amplitude Noise
-	// (standard deviation)
-	private final static int SAMPLE_WINDOW = 50;
+	private static final String tag = LinearAccelerationLPFActivity.class
+			.getSimpleName();
 
 	// Plot keys for the acceleration plot
 	private final static int PLOT_ACCEL_X_AXIS_KEY = 0;
 	private final static int PLOT_ACCEL_Y_AXIS_KEY = 1;
 	private final static int PLOT_ACCEL_Z_AXIS_KEY = 2;
 
-	// Plot keys for the LPF Wikipedia plot
-	private final static int PLOT_LPF_WIKI_X_AXIS_KEY = 3;
-	private final static int PLOT_LPF_WIKI_Y_AXIS_KEY = 4;
-	private final static int PLOT_LPF_WIKI_Z_AXIS_KEY = 5;
-
 	// Plot keys for the LPF Android Developer plot
-	private final static int PLOT_LPF_AND_DEV_X_AXIS_KEY = 6;
-	private final static int PLOT_LPF_AND_DEV_Y_AXIS_KEY = 7;
-	private final static int PLOT_LPF_AND_DEV_Z_AXIS_KEY = 8;
+	private final static int PLOT_LPF_AND_DEV_X_AXIS_KEY = 3;
+	private final static int PLOT_LPF_AND_DEV_Y_AXIS_KEY = 4;
+	private final static int PLOT_LPF_AND_DEV_Z_AXIS_KEY = 5;
 
-	// Indicate if the AndDev LPF should be plotted
-	private boolean plotLPFAndDev = false;
+	private boolean plotLPFReady = false;
 
-	// Indicate if the Wiki LPF should be plotted
-	private boolean plotLPFWiki = false;
-
-	// Indicate the plots are ready to accept inputs
-	private boolean plotLPFWikiReady = false;
-	private boolean plotLPFAndDevReady = false;
+	private boolean invertAxisActive = false;
 
 	// Indicate if the output should be logged to a .csv file
 	private boolean logData = false;
-
-	// Indicate if a static alpha should be used for the LPF Wikipedia
-	private boolean staticWikiAlpha = false;
-
-	// Indicate if a static alpha should be used for the LPF Android Developer
-	private boolean staticAndDevAlpha = false;
-
-	// Decimal formats for the UI outputs
-	private DecimalFormat df;
-	private DecimalFormat dfLong;
-
-	// Graph plot for the UI outputs
-	private DynamicLinePlot dynamicPlot;
 
 	// Touch to zoom constants for the dynamicPlot
 	private float distance = 0;
 	private float zoom = 1.2f;
 
+	private float lpfTimeConstant = 1;
+
 	// Outputs for the acceleration and LPFs
-	private float[] acceleration = new float[3];
-	private float[] lpfWikiOutput = new float[3];
-	private float[] lpfAndDevOutput = new float[3];
-
-	// The Acceleration Gauge
-	private GaugeRotationHolo gaugeAccelerationTilt;
-
-	// The LPF Gauge
-	private GaugeRotationHolo gaugeLPFWikiTilt;
-
-	// The LPF Gauge
-	private GaugeRotationHolo gaugeLPFAndDevTilt;
-
-	private GaugeAccelerationHolo gaugeAcceleration;
-
-	private GaugeAccelerationHolo gaugeLPFWikiAcceleration;
-
-	private GaugeAccelerationHolo gaugeLPFAndDevAcceleration;
-
-	// Handler for the UI plots so everything plots smoothly
-	private Handler handler;
-
-	// Icon to indicate logging is active
-	private ImageView iconLogger;
+	private float[] rawAcceleration = new float[3];
+	private float[] lpfAcceleration = new float[3];
 
 	// The generation of the log output
 	private int generation = 0;
@@ -192,11 +131,6 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	private int plotAccelYAxisColor;
 	private int plotAccelZAxisColor;
 
-	// Color keys for the LPF Wikipedia plot
-	private int plotLPFWikiXAxisColor;
-	private int plotLPFWikiYAxisColor;
-	private int plotLPFWikiZAxisColor;
-
 	// Color keys for the LPF Android Developer plot
 	private int plotLPFAndDevXAxisColor;
 	private int plotLPFAndDevYAxisColor;
@@ -205,9 +139,30 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	// Log output time stamp
 	private long logTime = 0;
 
-	// Low-Pass Filters
-	private LowPassFilter lpfWiki;
-	private LowPassFilter lpfAndDev;
+	// Decimal formats for the UI outputs
+	private DecimalFormat df;
+	private DecimalFormat dfLong;
+
+	// Graph plot for the UI outputs
+	private DynamicLinePlot dynamicPlot;
+
+	// The Acceleration Gauge
+	private GaugeRotation gaugeAccelerationTilt;
+
+	// The LPF Gauge
+	private GaugeRotation gaugeLPFTilt;
+
+	private GaugeAcceleration gaugeAcceleration;
+
+	private GaugeAcceleration gaugeLPFAcceleration;
+
+	// Handler for the UI plots so everything plots smoothly
+	private Handler handler;
+
+	// Icon to indicate logging is active
+	private ImageView iconLogger;
+
+	private LowPassFilter lpf;
 
 	// Plot colors
 	private PlotColor color;
@@ -215,22 +170,20 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	// Sensor manager to access the accelerometer sensor
 	private SensorManager sensorManager;
 
-	private SettingsDialog settingsDialog;
+	private FilterSettingsDialog filterSettingsDialog;
+	private SensorSettingsDialog sensorSettingsDialog;
 
 	// Acceleration plot titles
 	private String plotAccelXAxisTitle = "AX";
 	private String plotAccelYAxisTitle = "AY";
 	private String plotAccelZAxisTitle = "AZ";
 
-	// LPF Wikipedia plot titles
-	private String plotLPFWikiXAxisTitle = "WX";
-	private String plotLPFWikiYAxisTitle = "WY";
-	private String plotLPFWikiZAxisTitle = "WZ";
-
 	// LPF Android Developer plot tiltes
-	private String plotLPFAndDevXAxisTitle = "ADX";
-	private String plotLPFAndDevYAxisTitle = "ADY";
-	private String plotLPFAndDevZAxisTitle = "ADZ";
+	private String plotLPFAndDevXAxisTitle = "LPFX";
+	private String plotLPFAndDevYAxisTitle = "LPFY";
+	private String plotLPFAndDevZAxisTitle = "LPFZ";
+
+	private String frequencySelection;
 
 	// Output log
 	private String log;
@@ -240,16 +193,6 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	private TextView yAxis;
 	private TextView zAxis;
 
-	/**
-	 * Get the sample window size for the standard deviation.
-	 * 
-	 * @return Sample window size for the standard deviation.
-	 */
-	public static int getSampleWindow()
-	{
-		return SAMPLE_WINDOW;
-	}
-
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -257,8 +200,13 @@ public class LinearAccelerationLPFActivity extends Activity implements
 
 		setContentView(R.layout.plot_sensor_activity);
 
-		// Read in the saved prefs
-		readPrefs();
+		TextView accelerationLable = (TextView) this
+				.findViewById(R.id.label_acceleration_name_0);
+		accelerationLable.setText("Acceleration");
+
+		TextView lpfLable = (TextView) this
+				.findViewById(R.id.label_acceleration_name_1);
+		lpfLable.setText("LPF");
 
 		// Get the sensor manager ready
 		sensorManager = (SensorManager) this
@@ -270,12 +218,28 @@ public class LinearAccelerationLPFActivity extends Activity implements
 
 		initFilters();
 
+		// Read in the saved prefs
+		readFilterPrefs();
+
 		// Initialize the plots
 		initColor();
 		initPlots();
 		initGauges();
 
 		handler = new Handler();
+	}
+
+	/**
+	 * A callback from the dialogs to update the user preferences.
+	 * 
+	 */
+	@Override
+	public void checkPlotPrefs()
+	{
+		readFilterPrefs();
+		readSensorPrefs();
+
+		updateSensorDelay();
 	}
 
 	@Override
@@ -298,14 +262,14 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	{
 		super.onResume();
 
-		readPrefs();
+		lpf.reset();
+
+		readFilterPrefs();
+		readSensorPrefs();
 
 		handler.post(this);
 
-		// Register for sensor updates.
-		sensorManager.registerListener(this,
-				sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-				SensorManager.SENSOR_DELAY_FASTEST);
+		updateSensorDelay();
 	}
 
 	@Override
@@ -319,14 +283,29 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	public void onSensorChanged(SensorEvent event)
 	{
 		// Get a local copy of the sensor values
-		System.arraycopy(event.values, 0, acceleration, 0, event.values.length);
+		System.arraycopy(event.values, 0, rawAcceleration, 0,
+				event.values.length);
 
-		acceleration[0] = acceleration[0] / SensorManager.GRAVITY_EARTH;
-		acceleration[1] = acceleration[1] / SensorManager.GRAVITY_EARTH;
-		acceleration[2] = acceleration[2] / SensorManager.GRAVITY_EARTH;
+		if (!invertAxisActive)
+		{
+			rawAcceleration[0] = rawAcceleration[0]
+					/ SensorManager.GRAVITY_EARTH;
+			rawAcceleration[1] = rawAcceleration[1]
+					/ SensorManager.GRAVITY_EARTH;
+			rawAcceleration[2] = rawAcceleration[2]
+					/ SensorManager.GRAVITY_EARTH;
+		}
+		else
+		{
+			rawAcceleration[0] = -rawAcceleration[0]
+					/ SensorManager.GRAVITY_EARTH;
+			rawAcceleration[1] = -rawAcceleration[1]
+					/ SensorManager.GRAVITY_EARTH;
+			rawAcceleration[2] = -rawAcceleration[2]
+					/ SensorManager.GRAVITY_EARTH;
+		}
 
-		lpfWikiOutput = lpfWiki.addSamples(acceleration);
-		lpfAndDevOutput = lpfAndDev.addSamples(acceleration);
+		lpfAcceleration = lpf.addSamples(rawAcceleration);
 	}
 
 	@Override
@@ -348,17 +327,29 @@ public class LinearAccelerationLPFActivity extends Activity implements
 		{
 
 		// Log the data
-		case R.id.menu_settings_logger_plotdata:
+		case R.id.action_log_data:
 			startDataLog();
 			return true;
 
-			// Log the data
-		case R.id.menu_settings_filter:
-			showSettingsDialog();
+			// Start the vector activity
+		case R.id.action_vector_view:
+			Intent vectorIntent = new Intent(this,
+					AccelerationVectorActivity.class);
+			startActivity(vectorIntent);
 			return true;
 
 			// Log the data
-		case R.id.menu_settings_help:
+		case R.id.action_settings_filter:
+			showFilterSettingsDialog();
+			return true;
+
+			// Log the data
+		case R.id.action_settings_sensor:
+			showSensorSettingsDialog();
+			return true;
+
+			// Log the data
+		case R.id.action_help:
 			showHelpDialog();
 			return true;
 
@@ -419,46 +410,6 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	}
 
 	/**
-	 * Indicate if the Wikipedia LPF should be plotted.
-	 * 
-	 * @param plotLPFWiki
-	 *            Plot the filter if true.
-	 */
-	public void setPlotLPFWiki(boolean plotLPFWiki)
-	{
-		this.plotLPFWiki = plotLPFWiki;
-
-		if (this.plotLPFWiki)
-		{
-			addLPFWikiPlot();
-		}
-		else
-		{
-			removeLPFWikiPlot();
-		}
-	}
-
-	/**
-	 * Indicate if the Android Developer LPF should be plotted.
-	 * 
-	 * @param plotLPFAndDev
-	 *            Plot the filter if true.
-	 */
-	public void setPlotLPFAndDev(boolean plotLPFAndDev)
-	{
-		this.plotLPFAndDev = plotLPFAndDev;
-
-		if (this.plotLPFAndDev)
-		{
-			addLPFAndDevPlot();
-		}
-		else
-		{
-			removeLPFAndDevPlot();
-		}
-	}
-
-	/**
 	 * Create the output graph line chart.
 	 */
 	private void addAccelerationPlot()
@@ -469,39 +420,18 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	}
 
 	/**
-	 * Add the Android Developer LPF plot.
+	 * Add the LPF plot.
 	 */
-	private void addLPFAndDevPlot()
+	private void addLPFPlot()
 	{
-		if (plotLPFAndDev)
-		{
-			addPlot(plotLPFAndDevXAxisTitle, PLOT_LPF_AND_DEV_X_AXIS_KEY,
-					plotLPFAndDevXAxisColor);
-			addPlot(plotLPFAndDevYAxisTitle, PLOT_LPF_AND_DEV_Y_AXIS_KEY,
-					plotLPFAndDevYAxisColor);
-			addPlot(plotLPFAndDevZAxisTitle, PLOT_LPF_AND_DEV_Z_AXIS_KEY,
-					plotLPFAndDevZAxisColor);
+		addPlot(plotLPFAndDevXAxisTitle, PLOT_LPF_AND_DEV_X_AXIS_KEY,
+				plotLPFAndDevXAxisColor);
+		addPlot(plotLPFAndDevYAxisTitle, PLOT_LPF_AND_DEV_Y_AXIS_KEY,
+				plotLPFAndDevYAxisColor);
+		addPlot(plotLPFAndDevZAxisTitle, PLOT_LPF_AND_DEV_Z_AXIS_KEY,
+				plotLPFAndDevZAxisColor);
 
-			plotLPFAndDevReady = true;
-		}
-	}
-
-	/**
-	 * Add the Wikipedia LPF plot.
-	 */
-	private void addLPFWikiPlot()
-	{
-		if (plotLPFWiki)
-		{
-			addPlot(plotLPFWikiXAxisTitle, PLOT_LPF_WIKI_X_AXIS_KEY,
-					plotLPFWikiXAxisColor);
-			addPlot(plotLPFWikiYAxisTitle, PLOT_LPF_WIKI_Y_AXIS_KEY,
-					plotLPFWikiYAxisColor);
-			addPlot(plotLPFWikiZAxisTitle, PLOT_LPF_WIKI_Z_AXIS_KEY,
-					plotLPFWikiZAxisColor);
-
-			plotLPFWikiReady = true;
-		}
+		plotLPFReady = true;
 	}
 
 	/**
@@ -530,8 +460,8 @@ public class LinearAccelerationLPFActivity extends Activity implements
 
 		helpDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-		helpDialog.setContentView(getLayoutInflater().inflate(R.layout.help,
-				null));
+		helpDialog.setContentView(getLayoutInflater().inflate(
+				R.layout.help_dialog_view, null));
 
 		helpDialog.show();
 	}
@@ -539,16 +469,31 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	/**
 	 * Show a settings dialog.
 	 */
-	private void showSettingsDialog()
+	private void showFilterSettingsDialog()
 	{
-		if (settingsDialog == null)
+		if (filterSettingsDialog == null)
 		{
-			settingsDialog = new SettingsDialog(this, lpfWiki, lpfAndDev);
-			settingsDialog.setCancelable(true);
-			settingsDialog.setCanceledOnTouchOutside(true);
+			filterSettingsDialog = new FilterSettingsDialog(this, this);
+			filterSettingsDialog.setCancelable(true);
+			filterSettingsDialog.setCanceledOnTouchOutside(true);
 		}
 
-		settingsDialog.show();
+		filterSettingsDialog.show();
+	}
+
+	/**
+	 * Show a settings dialog.
+	 */
+	private void showSensorSettingsDialog()
+	{
+		if (sensorSettingsDialog == null)
+		{
+			sensorSettingsDialog = new SensorSettingsDialog(this, this);
+			sensorSettingsDialog.setCancelable(true);
+			sensorSettingsDialog.setCanceledOnTouchOutside(true);
+		}
+
+		sensorSettingsDialog.show();
 	}
 
 	/**
@@ -562,10 +507,6 @@ public class LinearAccelerationLPFActivity extends Activity implements
 		plotAccelYAxisColor = color.getDarkGreen();
 		plotAccelZAxisColor = color.getDarkRed();
 
-		plotLPFWikiXAxisColor = color.getMidBlue();
-		plotLPFWikiYAxisColor = color.getMidGreen();
-		plotLPFWikiZAxisColor = color.getMidRed();
-
 		plotLPFAndDevXAxisColor = color.getLightBlue();
 		plotLPFAndDevYAxisColor = color.getLightGreen();
 		plotLPFAndDevZAxisColor = color.getLightRed();
@@ -576,16 +517,8 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	 */
 	private void initFilters()
 	{
-		// Create the low-pass filters
-		lpfWiki = new LPFWikipedia();
-		lpfAndDev = new LPFAndroidDeveloper();
-
-		// Initialize the low-pass filters with the saved prefs
-		lpfWiki.setAlphaStatic(staticWikiAlpha);
-		lpfWiki.setAlpha(WIKI_STATIC_ALPHA);
-
-		lpfAndDev.setAlphaStatic(staticAndDevAlpha);
-		lpfAndDev.setAlpha(AND_DEV_STATIC_ALPHA);
+		lpf = new LowPassFilter();
+		lpf.setTimeConstant(lpfTimeConstant);
 	}
 
 	/**
@@ -593,13 +526,11 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	 */
 	private void initGauges()
 	{
-		gaugeAccelerationTilt = (GaugeRotationHolo) findViewById(R.id.gauge_acceleration_tilt);
-		gaugeLPFWikiTilt = (GaugeRotationHolo) findViewById(R.id.gauge_lpf_wiki_tilt);
-		gaugeLPFAndDevTilt = (GaugeRotationHolo) findViewById(R.id.gauge_lpf_and_dev_tilt);
+		gaugeAccelerationTilt = (GaugeRotation) findViewById(R.id.gauge_rotation_0);
+		gaugeLPFTilt = (GaugeRotation) findViewById(R.id.gauge_rotation_1);
 
-		gaugeAcceleration = (GaugeAccelerationHolo) findViewById(R.id.gauge_acceleration);
-		gaugeLPFWikiAcceleration = (GaugeAccelerationHolo) findViewById(R.id.gauge_lpf_wiki);
-		gaugeLPFAndDevAcceleration = (GaugeAccelerationHolo) findViewById(R.id.gauge_lpf_and_dev);
+		gaugeAcceleration = (GaugeAcceleration) findViewById(R.id.gauge_acceleration_0);
+		gaugeLPFAcceleration = (GaugeAcceleration) findViewById(R.id.gauge_acceleration_1);
 	}
 
 	/**
@@ -617,7 +548,7 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	 */
 	private void initPlots()
 	{
-		View view = findViewById(R.id.ScrollView01);
+		View view = findViewById(R.id.plot_layout);
 		view.setOnTouchListener(this);
 
 		// Create the graph plot
@@ -628,8 +559,7 @@ public class LinearAccelerationLPFActivity extends Activity implements
 		dynamicPlot.setMinRange(-1.2);
 
 		addAccelerationPlot();
-		addLPFWikiPlot();
-		addLPFAndDevPlot();
+		addLPFPlot();
 	}
 
 	/**
@@ -650,31 +580,13 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	/**
 	 * Remove the Android Developer LPF plot.
 	 */
-	private void removeLPFAndDevPlot()
+	private void removeLPFPlot()
 	{
-		if (!plotLPFAndDev)
-		{
-			plotLPFAndDevReady = false;
+		plotLPFReady = false;
 
-			removePlot(PLOT_LPF_AND_DEV_X_AXIS_KEY);
-			removePlot(PLOT_LPF_AND_DEV_Y_AXIS_KEY);
-			removePlot(PLOT_LPF_AND_DEV_Z_AXIS_KEY);
-		}
-	}
-
-	/**
-	 * Remove the Wikipedia LPF plot.
-	 */
-	private void removeLPFWikiPlot()
-	{
-		if (!plotLPFWiki)
-		{
-			plotLPFWikiReady = false;
-
-			removePlot(PLOT_LPF_WIKI_X_AXIS_KEY);
-			removePlot(PLOT_LPF_WIKI_Y_AXIS_KEY);
-			removePlot(PLOT_LPF_WIKI_Z_AXIS_KEY);
-		}
+		removePlot(PLOT_LPF_AND_DEV_X_AXIS_KEY);
+		removePlot(PLOT_LPF_AND_DEV_Y_AXIS_KEY);
+		removePlot(PLOT_LPF_AND_DEV_Z_AXIS_KEY);
 	}
 
 	/**
@@ -710,12 +622,6 @@ public class LinearAccelerationLPFActivity extends Activity implements
 
 			headers += this.plotAccelZAxisTitle + ",";
 
-			headers += this.plotLPFWikiXAxisTitle + ",";
-
-			headers += this.plotLPFWikiYAxisTitle + ",";
-
-			headers += this.plotLPFWikiZAxisTitle + ",";
-
 			headers += this.plotLPFAndDevXAxisTitle + ",";
 
 			headers += this.plotLPFAndDevYAxisTitle + ",";
@@ -742,42 +648,29 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	 */
 	private void plotData()
 	{
-		dynamicPlot.setData(acceleration[0], PLOT_ACCEL_X_AXIS_KEY);
-		dynamicPlot.setData(acceleration[1], PLOT_ACCEL_Y_AXIS_KEY);
-		dynamicPlot.setData(acceleration[2], PLOT_ACCEL_Z_AXIS_KEY);
+		dynamicPlot.setData(rawAcceleration[0], PLOT_ACCEL_X_AXIS_KEY);
+		dynamicPlot.setData(rawAcceleration[1], PLOT_ACCEL_Y_AXIS_KEY);
+		dynamicPlot.setData(rawAcceleration[2], PLOT_ACCEL_Z_AXIS_KEY);
 
-		gaugeAccelerationTilt.updateRotation(acceleration);
+		gaugeAccelerationTilt.updateRotation(rawAcceleration);
 
-		gaugeAcceleration.updatePoint(acceleration[0]
-				* SensorManager.GRAVITY_EARTH, acceleration[1]
+		gaugeAcceleration.updatePoint(rawAcceleration[0]
+				* SensorManager.GRAVITY_EARTH, rawAcceleration[1]
 				* SensorManager.GRAVITY_EARTH, Color.parseColor("#33b5e5"));
 
-		if (plotLPFWikiReady)
-		{
-			dynamicPlot.setData(lpfWikiOutput[0], PLOT_LPF_WIKI_X_AXIS_KEY);
-			dynamicPlot.setData(lpfWikiOutput[1], PLOT_LPF_WIKI_Y_AXIS_KEY);
-			dynamicPlot.setData(lpfWikiOutput[2], PLOT_LPF_WIKI_Z_AXIS_KEY);
-
-			gaugeLPFWikiTilt.updateRotation(lpfWikiOutput);
-
-			gaugeLPFWikiAcceleration.updatePoint(lpfWikiOutput[0]
-					* SensorManager.GRAVITY_EARTH, lpfWikiOutput[1]
-					* SensorManager.GRAVITY_EARTH, Color.parseColor("#33b5e5"));
-		}
-
-		if (plotLPFAndDevReady)
+		if (plotLPFReady)
 		{
 			dynamicPlot
-					.setData(lpfAndDevOutput[0], PLOT_LPF_AND_DEV_X_AXIS_KEY);
+					.setData(lpfAcceleration[0], PLOT_LPF_AND_DEV_X_AXIS_KEY);
 			dynamicPlot
-					.setData(lpfAndDevOutput[1], PLOT_LPF_AND_DEV_Y_AXIS_KEY);
+					.setData(lpfAcceleration[1], PLOT_LPF_AND_DEV_Y_AXIS_KEY);
 			dynamicPlot
-					.setData(lpfAndDevOutput[2], PLOT_LPF_AND_DEV_Z_AXIS_KEY);
+					.setData(lpfAcceleration[2], PLOT_LPF_AND_DEV_Z_AXIS_KEY);
 
-			gaugeLPFAndDevTilt.updateRotation(lpfAndDevOutput);
+			gaugeLPFTilt.updateRotation(lpfAcceleration);
 
-			gaugeLPFAndDevAcceleration.updatePoint(lpfAndDevOutput[0]
-					* SensorManager.GRAVITY_EARTH, lpfAndDevOutput[1]
+			gaugeLPFAcceleration.updatePoint(lpfAcceleration[0]
+					* SensorManager.GRAVITY_EARTH, lpfAcceleration[1]
 					* SensorManager.GRAVITY_EARTH, Color.parseColor("#33b5e5"));
 		}
 
@@ -788,9 +681,9 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	private void updateTextViewOutputs()
 	{
 		// Update the view with the new acceleration data
-		xAxis.setText(df.format(acceleration[0]));
-		yAxis.setText(df.format(acceleration[1]));
-		zAxis.setText(df.format(acceleration[2]));
+		xAxis.setText(df.format(rawAcceleration[0]));
+		yAxis.setText(df.format(rawAcceleration[1]));
+		zAxis.setText(df.format(rawAcceleration[2]));
 	}
 
 	/**
@@ -809,17 +702,13 @@ public class LinearAccelerationLPFActivity extends Activity implements
 			log += generation++ + ",";
 			log += System.currentTimeMillis() - logTime + ",";
 
-			log += acceleration[0] + ",";
-			log += acceleration[1] + ",";
-			log += acceleration[2] + ",";
+			log += rawAcceleration[0] + ",";
+			log += rawAcceleration[1] + ",";
+			log += rawAcceleration[2] + ",";
 
-			log += lpfWikiOutput[0] + ",";
-			log += lpfWikiOutput[1] + ",";
-			log += lpfWikiOutput[2] + ",";
-
-			log += lpfAndDevOutput[0] + ",";
-			log += lpfAndDevOutput[1] + ",";
-			log += lpfAndDevOutput[2] + ",";
+			log += lpfAcceleration[0] + ",";
+			log += lpfAcceleration[1] + ",";
+			log += lpfAcceleration[2] + ",";
 		}
 	}
 
@@ -829,15 +718,15 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	private void writeLogToFile()
 	{
 		Calendar c = Calendar.getInstance();
-		String filename = "AccelerationFilter-" + c.get(Calendar.YEAR) + "-"
-				+ c.get(Calendar.DAY_OF_WEEK_IN_MONTH) + "-"
-				+ c.get(Calendar.HOUR) + "-" + c.get(Calendar.HOUR) + "-"
-				+ c.get(Calendar.MINUTE) + "-" + c.get(Calendar.SECOND)
+		String filename = "LPFLinearAcceleration-" + c.get(Calendar.YEAR) + "-"
+				+ (c.get(Calendar.MONTH) + 1) + "-"
+				+ c.get(Calendar.DAY_OF_MONTH) + "-" + c.get(Calendar.HOUR)
+				+ "-" + c.get(Calendar.MINUTE) + "-" + c.get(Calendar.SECOND)
 				+ ".csv";
 
 		File dir = new File(Environment.getExternalStorageDirectory()
-				+ File.separator + "AccelerationFilter" + File.separator
-				+ "Logs" + File.separator + "Acceleration");
+				+ File.separator + "LPFLinearAcceleration" + File.separator
+				+ "Logs");
 		if (!dir.exists())
 		{
 			dir.mkdirs();
@@ -878,14 +767,14 @@ public class LinearAccelerationLPFActivity extends Activity implements
 			// Note that it appears that the ACTION_MEDIA_MOUNTED approach is
 			// now blocked for non-system apps on Android 4.4.
 			MediaScannerConnection.scanFile(this, new String[]
-			{ "file://" + Environment.getExternalStorageDirectory() }, null,
+			{ file.getPath() }, null,
 					new MediaScannerConnection.OnScanCompletedListener()
 					{
 						@Override
 						public void onScanCompleted(final String path,
 								final Uri uri)
 						{
-				
+
 						}
 					});
 		}
@@ -907,55 +796,97 @@ public class LinearAccelerationLPFActivity extends Activity implements
 	/**
 	 * Read in the current user preferences.
 	 */
-	private void readPrefs()
+	private void readFilterPrefs()
 	{
-		SharedPreferences prefs = this.getSharedPreferences("lpf_prefs",
-				Activity.MODE_PRIVATE);
+		SharedPreferences prefs = this.getSharedPreferences(
+				PrefUtils.FILTER_PREFS, Activity.MODE_PRIVATE);
 
-		this.plotLPFAndDev = prefs.getBoolean("plot_lpf_and_dev", false);
-		this.plotLPFWiki = prefs.getBoolean("plot_lpf_wiki", false);
+		this.invertAxisActive = prefs.getBoolean(PrefUtils.INVERT_AXIS_ACTIVE,
+				false);
 
-		WIKI_STATIC_ALPHA = prefs.getFloat("lpf_wiki_alpha", 0.1f);
-		AND_DEV_STATIC_ALPHA = prefs.getFloat("lpf_and_dev_alpha", 0.9f);
+		this.lpfTimeConstant = prefs.getFloat(PrefUtils.LPF_TIME_CONSTANT, 1);
+
+		lpf.setTimeConstant(lpfTimeConstant);
 	}
 
 	/**
-	 * A simple formatter to convert bar indexes into sensor names.
+	 * Read in the current user preferences.
 	 */
-	private class NoiseIndexFormat extends Format
+	private void readSensorPrefs()
 	{
+		SharedPreferences prefs = this.getSharedPreferences(
+				PrefUtils.SENSOR_PREFS, Activity.MODE_PRIVATE);
 
-		@Override
-		public StringBuffer format(Object obj, StringBuffer toAppendTo,
-				FieldPosition pos)
+		this.frequencySelection = prefs.getString(
+				PrefUtils.SENSOR_FREQUENCY_PREF,
+				PrefUtils.SENSOR_FREQUENCY_FAST);
+	}
+
+	/**
+	 * Set the sensor delay based on user preferences. 0 = slow, 1 = medium, 2 =
+	 * fast.
+	 * 
+	 * @param position
+	 *            The desired sensor delay.
+	 */
+	private void setSensorDelay(int position)
+	{
+		switch (position)
 		{
-			Number num = (Number) obj;
+		case 0:
 
-			// using num.intValue() will floor the value, so we add 0.5 to round
-			// instead:
-			int roundNum = (int) (num.floatValue() + 0.5f);
-			switch (roundNum)
-			{
-			case 0:
-				toAppendTo.append("Accel");
-				break;
-			case 1:
-				toAppendTo.append("LPFWiki");
-				break;
-			case 2:
-				toAppendTo.append("LPFAndDev");
-				break;
-			default:
-				toAppendTo.append("Unknown");
-			}
-			return toAppendTo;
+			sensorManager.unregisterListener(this,
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
+
+			// Register for sensor updates.
+			sensorManager.registerListener(this,
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+					SensorManager.SENSOR_DELAY_NORMAL);
+			break;
+		case 1:
+
+			sensorManager.unregisterListener(this,
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
+
+			// Register for sensor updates.
+			sensorManager.registerListener(this,
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+					SensorManager.SENSOR_DELAY_GAME);
+			break;
+		case 2:
+
+			sensorManager.unregisterListener(this,
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
+
+			// Register for sensor updates.
+			sensorManager.registerListener(this,
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+					SensorManager.SENSOR_DELAY_FASTEST);
+			break;
+		}
+		
+		lpf.reset();
+	}
+
+	/**
+	 * Updates the sensor delay based on the user preference. 0 = slow, 1 =
+	 * medium, 2 = fast.
+	 */
+	private void updateSensorDelay()
+	{
+		if (frequencySelection.equals(PrefUtils.SENSOR_FREQUENCY_SLOW))
+		{
+			setSensorDelay(0);
 		}
 
-		@Override
-		public Object parseObject(String string, ParsePosition position)
+		if (frequencySelection.equals(PrefUtils.SENSOR_FREQUENCY_MEDIUM))
 		{
-			// TODO Auto-generated method stub
-			return null;
+			setSensorDelay(1);
+		}
+
+		if (frequencySelection.equals(PrefUtils.SENSOR_FREQUENCY_FAST))
+		{
+			setSensorDelay(2);
 		}
 	}
 }

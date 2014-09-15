@@ -18,7 +18,7 @@ import android.view.View;
 
 /*
  * Low-Pass Linear Acceleration
- * Copyright (C) 2013, Kaleb Kircher - Boki Software, Kircher Engineering, LLC
+ * Copyright (C) 2013, Kaleb Kircher - Kircher Engineering, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ import android.view.View;
  * @see http://developer.android.com/reference/android/view/View.html
  * @since Scott Bannick 7/19/2013: Made gui changes
  */
-public final class GaugeAccelerationHolo extends View
+public final class GaugeAcceleration extends View
 {
 
 	/*
@@ -94,7 +94,7 @@ public final class GaugeAccelerationHolo extends View
 	 * break a significant number of them, from subtly to significantly.)
 	 */
 
-	private static final String tag = GaugeAccelerationHolo.class.getSimpleName();
+	private static final String tag = GaugeAcceleration.class.getSimpleName();
 
 	// holds the cached static part
 	private Bitmap background;
@@ -130,7 +130,7 @@ public final class GaugeAccelerationHolo extends View
 	 * 
 	 * @param context
 	 */
-	public GaugeAccelerationHolo(Context context)
+	public GaugeAcceleration(Context context)
 	{
 		super(context);
 		init();
@@ -142,7 +142,7 @@ public final class GaugeAccelerationHolo extends View
 	 * @param context
 	 * @param attrs
 	 */
-	public GaugeAccelerationHolo(Context context, AttributeSet attrs)
+	public GaugeAcceleration(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
 		init();
@@ -155,7 +155,7 @@ public final class GaugeAccelerationHolo extends View
 	 * @param attrs
 	 * @param defStyle
 	 */
-	public GaugeAccelerationHolo(Context context, AttributeSet attrs, int defStyle)
+	public GaugeAcceleration(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
 		init();
@@ -173,7 +173,7 @@ public final class GaugeAccelerationHolo extends View
 	 */
 	public void updatePoint(float x, float y, int color)
 	{
-		this.x = ((faceRect.right - faceRect.left) / (SensorManager.GRAVITY_EARTH * 2))
+		this.x = -((faceRect.right - faceRect.left) / (SensorManager.GRAVITY_EARTH * 2))
 				* x + faceRect.centerX();
 		this.y = ((faceRect.bottom - faceRect.top) / (SensorManager.GRAVITY_EARTH * 2))
 				* y + faceRect.centerY();

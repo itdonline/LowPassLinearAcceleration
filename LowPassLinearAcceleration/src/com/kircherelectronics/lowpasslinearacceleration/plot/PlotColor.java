@@ -7,7 +7,7 @@ import android.content.Context;
 
 /*
  * Low-Pass Linear Acceleration
- * Copyright (C) 2013, Kaleb Kircher - Boki Software, Kircher Engineering, LLC
+ * Copyright (C) 2013, Kaleb Kircher - Kircher Engineering, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
