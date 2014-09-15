@@ -20,8 +20,12 @@ A low-pass filter is a filter that passes low-frequency signals and attenuates (
 Features:
 * Plot linear acceleration in real-time
 * Log linear acceleration to a .CSV file
-* Modify the parameters of the low-pass filter to meet your requirements
+* Define the time constant of the low-pass filter to meet your requirements
+* Select the output frequency of the acceleration sensor
+* View the acceleration as a line-plot or as a two-dimensional vector
 * Quickly compare different low-pass filter configurations
+* Tilt gauges display the tilt of the device as seen by the acceleration and linear acceleration sensors.
+* Acceleration gauges display the acceleration of the device as seen by the acceleration and linear acceleration sensors.
 
 Useful Links:
 
